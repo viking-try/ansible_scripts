@@ -1,0 +1,200 @@
+- 
+  name: work work woooooork 
+  hosts: all
+  vars:
+     nakstra: 
+       - "ansible_date_time.date"
+       - 'ansible_date_time.time' 
+     outip: 3.87.96.130
+  become: true 
+  tasks: 
+    - name: folder creation test.txt
+      file: path=/tmp/ansible state=directory mode=755 owner=ansible group=ansible
+
+    - name: create multiple files 
+      file: path={{ item }} state=directory
+      with_items:
+        - '/tmp/loop1'
+        - '/tmp/loop2'
+        - '/tmp/loop3'
+    - name: create a user
+      user: name=mira password=mira1234 group=ansible shell=/bin/bash
+
+    - name: dns entry 
+      copy: content="nameserver 8.8.8.8 \n" dest=/tmp/text.txt
+
+    - name: copy file 
+      copy: src=/etc/passwd dest=/tmp/passwd 
+
+    - name: replace root
+      replace:
+        path: /tmp/passwd 
+        regexp: 'root'
+        replace: "groot"
+
+    - name: zip 
+      archive:
+        path: /tmp/loop1
+        dest: /tmp/loop1.zip
+        format: zip
+
+    - name: prit date 
+      debug:
+        var=ansible_date_time.time
+        #debug:
+        #var=ansible_date_time.date
+      tags: 
+        - date 
+    
+    - name: make a filw iwth date 
+      command: touch /tmp/maka{{ansible_date_time.date}}.txt
+      tags:
+        - date_file
+
+    - name: printing date and time
+      debug:
+        msg: 
+          this is 0  {{ nakstra[0] }}  
+          time is {{ nakstra[1] }}
+        #  time is  {{ ansible_date_time.time }}
+        #       date  is {{ ansible_date_time.date }}
+      tags:
+        - msg
+
+          
+    - name: Ansible register variable basic example
+      shell: "find *.txt"
+      args:
+        chdir: "/tmp/"
+      register: reg_output
+
+    - debug:
+        var: reg_output
+
+    - name: appand in file
+      lineinfile: 
+        path: /tmp/text.txt
+        line: 'nameserver 4.4.2.2'
+      tags:
+        - appd 
+          
+    - name: print 
+      shell: cat /tmp/text.txt
+      register: script
+      #- name: stdout of getIt
+    - debug: msg={{ script.stdout }}
+      #tags:
+              #- appd
+          #    - debug: msg= "the value of foo.txt is {{lookup('file', '/tmp/text.txt') }}"
+          # - name: print content of file 
+          #debug: var=item
+          #with_file: "/tmp/text.txt"
+          #tags:
+          #- appd
+    - name: yum inst httpd 
+      when: inventory_hostname in groups['web']
+      yum: 
+        name: 
+          - httpd
+          - git
+        state: present 
+      tags:
+        - httpd
+
+          #    - name: uninstall httpd from db
+          #when: inventory_hostname in groups['db'] or  inventory_hostname in groups['com']
+          #yum: 
+          #name: 
+          #- httpd
+          #- git
+          #state: absent
+          #tags: 
+          #- unin
+    - name: http start
+      when: inventory_hostname in groups['web'] 
+      command: "nohup /usr/sbin/httpd -DFOREGROUND"
+      tags:
+        - httpd
+    - name: http info
+      when: inventory_hostname in groups['web']
+      debug:
+        msg: 
+                open {{ ansible_all_ipv4_addresses }} on port 8089 {{ ansible_eth0.ipv4.address }} #{{ ansible_memtotal_mb }} {{ ansible_devices.size }} {{ ipv4.address }}
+                
+      tags:
+        - httpd
+
+    - name: download tomcat  
+      get_url: url=https://download.oracle.com/otn/java/jdk/8u202-b08/1961070e4c9b4e26a04e7f5a083f551e/jdk-8u202-linux-x64.rpm dest=/home/ansible
+      #get_url: url=http://download.oracle.com/otn-pub/java/jdk/8u151-b12/jdk-8u151-linux-x64.tar.gz  dest=/home/ansible
+      tags:
+        - tom
+
+    - name: download JDK
+      when: inventory_hostname in groups['web']
+      get_url: url=https://github.com/frekele/oracle-java/releases/download/8u212-b10/jdk-8u212-linux-i586.rpm dest=/home/ansible
+      #args:
+      #  chdir: "/tmp/"
+      register: pwd 
+      tags: 
+        - jdk  
+    - name: out put  
+      debug: msg={{ pwd }}
+      tags:
+        - jdk
+    - name: remove some files 
+      when: inventory_host not in group ['web']
+      file: path={{ item }} state=absent
+      with_items: 
+        - /home/ansible/jdk-8u212-linux-i586.rpm
+        - /home/ansible/apache-tomcat-8.5.50.tar.gz
+      tags:
+        - jdk
+    - name: playing with variables
+      when: inventory_hostname in groups['web']
+      debug: 
+        msg: "{{ ansible_devices.xvda.partitions.xvda1.size }}"
+      tags:
+        - var
+    - name: install tomcat 
+      when: inventory_hostname in groups ['com']
+      yum: 
+        name: jdk-8u212-linux-i586.rpm 
+        state: present 
+      tags: 
+        - install  
+
+
+
+
+          # - name: yum uninstall 
+          # when: inventory_hostname in groups['com']
+          # yum:
+          # name:
+          # - httpd
+          # - git
+          # state: absent
+          # tags:
+          # - yum
+
+          #- name: Start httpd service
+          #service: name=git state=started  
+
+          # - name: service
+          #   service:
+          # name: httpd
+          #state: reloaded 
+      #when: inventory_hostname in groups['web']
+      # service: 
+      # name: httpd
+        #daemon_reload: yes
+        # state: restarted 
+        
+        #enabled: yes    
+        # tags:
+        # - yum
+
+          #   - name: start in docker
+          #     command: ls
+     # tags:
+     #  - yum 

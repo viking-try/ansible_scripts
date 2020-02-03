@@ -1,0 +1,6 @@
+[web]
+web1 ansible_host=172.20.0.4 ansible_user=ansible
+[db]
+db1 ansible_host=172.20.0.2 ansible_user=ansible 
+[com]
+com1 ansible_host=172.20.0.3  ansible_user=ansible
